@@ -23,7 +23,8 @@ db.once('open', function () {
 //ROUTES
 app.get('/books', getBooks);
 app.post('/books', postBook);
-app.delete('/books/:id',deleteBook);
+app.delete('/books/:id', deleteBook);
+app.put('/books/:id', updateBook);
 
 app.get('*', (request, response) => {
   response.status(404).send('Not available');
@@ -52,6 +53,17 @@ async function deleteBook(request, response, next) {
     let id = request.params.id
     await Book.findByIdAndDelete(id);
     response.status(200).send('Book has been burned');
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateBook(request, response, next) {
+  try {
+    let id = request.params.id
+    let data = request.body;
+    let updatedBook = await Book.findByIdAndUpdate(id, data, { new: true, overwrite: true });
+    response.status(200).send(updatedBook);
   } catch (error) {
     next(error);
   }
