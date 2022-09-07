@@ -3,6 +3,7 @@
 require('dotenv').config();
 const PORT = process.env.PORT || 3002;
 const Book = require('./models/book.js');
+const verifyUser = require('./auth.js');
 
 const express = require('express');
 const app = express();
@@ -31,42 +32,62 @@ app.get('*', (request, response) => {
 });
 
 async function getBooks(request, response, next) {
-  try {
-    let results = await Book.find();
-    response.status(200).send(results);
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token')
+    else {
+      try {
+        let results = await Book.find();
+        response.status(200).send(results);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function postBook(request, response, next) {
-  try {
-    let newBook = await Book.create(request.body);
-    response.status(200).send(newBook);
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let newBook = await Book.create(request.body);
+        response.status(200).send(newBook);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function deleteBook(request, response, next) {
-  try {
-    let id = request.params.id
-    await Book.findByIdAndDelete(id);
-    response.status(200).send('Book has been burned');
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let id = request.params.id
+        await Book.findByIdAndDelete(id);
+        response.status(200).send('Book has been burned');
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function updateBook(request, response, next) {
-  try {
-    let id = request.params.id
-    let data = request.body;
-    let updatedBook = await Book.findByIdAndUpdate(id, data, { new: true, overwrite: true });
-    response.status(200).send(updatedBook);
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let id = request.params.id
+        let data = request.body;
+        let updatedBook = await Book.findByIdAndUpdate(id, data, { new: true, overwrite: true });
+        response.status(200).send(updatedBook);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 app.use((error, request, response, next) => {
