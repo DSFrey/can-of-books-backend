@@ -3,6 +3,7 @@
 require('dotenv').config();
 const PORT = process.env.PORT || 3002;
 const Book = require('./models/book.js');
+const verifyUser = require('./auth.js');
 
 const express = require('express');
 const app = express();
@@ -30,13 +31,20 @@ app.get('*', (request, response) => {
   response.status(404).send('Not available');
 });
 
-async function getBooks(request, response, next) {
-  try {
-    let results = await Book.find();
-    response.status(200).send(results);
-  } catch (error) {
-    next(error);
-  }
+async function getBooks(request, response) {
+  verifyUser(request, async (error, user) => {
+    if (error) {
+      console.log(error)
+      response.send('Invalid Token')
+    } else {
+      try {
+        let results = await Book.find();
+        response.status(200).send(results);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function postBook(request, response, next) {
