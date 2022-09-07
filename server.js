@@ -31,12 +31,10 @@ app.get('*', (request, response) => {
   response.status(404).send('Not available');
 });
 
-async function getBooks(request, response) {
-  verifyUser(request, async (error, user) => {
-    if (error) {
-      console.log(error)
-      response.send('Invalid Token')
-    } else {
+async function getBooks(request, response, next) {
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token')
+    else {
       try {
         let results = await Book.find();
         response.status(200).send(results);
@@ -48,33 +46,48 @@ async function getBooks(request, response) {
 }
 
 async function postBook(request, response, next) {
-  try {
-    let newBook = await Book.create(request.body);
-    response.status(200).send(newBook);
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let newBook = await Book.create(request.body);
+        response.status(200).send(newBook);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function deleteBook(request, response, next) {
-  try {
-    let id = request.params.id
-    await Book.findByIdAndDelete(id);
-    response.status(200).send('Book has been burned');
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let id = request.params.id
+        await Book.findByIdAndDelete(id);
+        response.status(200).send('Book has been burned');
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 async function updateBook(request, response, next) {
-  try {
-    let id = request.params.id
-    let data = request.body;
-    let updatedBook = await Book.findByIdAndUpdate(id, data, { new: true, overwrite: true });
-    response.status(200).send(updatedBook);
-  } catch (error) {
-    next(error);
-  }
+  verifyUser(request, async (error) => {
+    if (error) response.send('Invalid Token');
+    else {
+      try {
+        let id = request.params.id
+        let data = request.body;
+        let updatedBook = await Book.findByIdAndUpdate(id, data, { new: true, overwrite: true });
+        response.status(200).send(updatedBook);
+      } catch (error) {
+        next(error);
+      }
+    }
+  })
 }
 
 app.use((error, request, response, next) => {
